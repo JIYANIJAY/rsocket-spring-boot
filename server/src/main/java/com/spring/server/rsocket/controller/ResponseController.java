@@ -65,6 +65,29 @@ public class ResponseController {
         return Mono.just(data);
     }
 
+    @MessageMapping("my-request-response-flux")
+    public Flux<UserDTO> requestResponseFlux() {
+        log.info("Received ping for request-response: {}");
+        List<User> users = userRepository.findAll();
+        Map<String, Boolean> map = new HashMap<>();
+        map.put("address", false);
+        List<UserDTO> userDTOS = new ArrayList<>();
+        users.forEach(user -> {
+            userDTOS.add(convertToDTO(user, map));
+        });
+
+
+//        log.info("Received ping for request-response: {}");
+//        List<User> users = userRepository.findAll();
+//        Map<String, Boolean> map = new HashMap<>();
+//        map.put("address", false);
+//        Flux<UserDTO> userDTOFlux = Flux.fromIterable(users)
+//                .map(user -> convertToDTO(user, map));
+//        return userDTOFlux.log();
+
+        return Flux.fromStream(userDTOS.stream()).log();
+    }
+
     private UserDTO convertToDTO(User user, Map<String, Boolean> map) {
         UserDTO userDTO = new UserDTO();
 

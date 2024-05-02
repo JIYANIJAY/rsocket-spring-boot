@@ -7,6 +7,7 @@ import com.spring.client.rsocket.dto.UserDTO;
 import io.netty.buffer.ByteBuf;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -45,7 +46,7 @@ public class HomeController {
 //                .retrieveMono(PingDto.class).log();
 //    }
 
-    @GetMapping("/request-response")
+    @GetMapping("/request-response-mono")
     public Mono<Data> requestResponse(@Payload UserDTO userDTO) {
         PingDto ping = PingDto.builder()
                 .source(CLIENT)
@@ -57,6 +58,31 @@ public class HomeController {
                 .route("my-request-response")
                 .data(userDTO)
                 .retrieveMono(Data.class).log();
+    }
+
+    @GetMapping("/request-response-flux")
+//    public ResponseEntity<Flux<List<UserDTO>>> requestResponseFlux(@Payload UserDTO userDTO) {
+    public ResponseEntity<Flux<UserDTO>> requestResponseFlux(@Payload UserDTO userDTO) {
+
+        PingDto ping = PingDto.builder()
+                .source(CLIENT)
+                .destination(SERVER)
+                .data("Test the Request-Response interaction model")
+                .build();
+        log.info("Ping for my-request-response: {}", ping);
+//        Flux<List<UserDTO>> resp= rSocketRequester
+//                .route("my-request-response-flux")
+//                .data(userDTO)
+//                .retrieveFlux(new ParameterizedTypeReference<List<UserDTO>>() {})
+//                .log();
+
+        Flux<UserDTO> resp= rSocketRequester
+                .route("my-request-response-flux")
+                .data(userDTO)
+                .retrieveFlux(UserDTO.class)
+                .log();
+
+        return ResponseEntity.ok().contentType(MediaType.TEXT_EVENT_STREAM).body(resp);
     }
 
     @GetMapping("/fire-and-forget")
